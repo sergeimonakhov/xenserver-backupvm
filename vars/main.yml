@@ -1,0 +1,17 @@
+---
+storage:
+  storage_name-1:
+    uuid: 0404d36a-a2a9-68e5-fd05-081e751f01eb
+  storage_name-N:
+    uuid: ff5d1e6a-10bf-628b-986c-2e9c2872ee88
+
+vm:
+  - vm-name1
+  - vm-name2
+  - vm-nameN
+
+
+vm_list: []
+sr_list: []
+date_list: []
+uuid_list: []
