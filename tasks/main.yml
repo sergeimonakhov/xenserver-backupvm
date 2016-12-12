@@ -1,52 +1,10 @@
 ---
-- name: Create snapshot vm
-  shell: xe vm-snapshot vm={{ item }} new-name-label={{ item }}-snap-{{ ansible_date_time.date }}
-  register: uuid
-  with_items: "{{ vm }}"
-
-- name: Generate vm-list
-  set_fact:
-    vm_list: "{{ vm_list + [ {'name': item.item, 'uuid': item.stdout} ] }}"
-  with_items: "{{ uuid.results }}"
-
 - name: Generate sr-list
   set_fact:
     sr_list: "{{ sr_list + [ {'name': item.key, 'uuid': item.value.uuid} ] }}"
   with_dict: "{{ storage }}"
 
-- name: Copy snapshot to template in storages 
-  shell: xe snapshot-copy new-name-label="{{ item[0].name }}-{{ ansible_date_time.date }}({{ item[1].name }})" new-name-description="Template created {{ ansible_date_time.date }}" uuid={{ item[0].uuid }} sr-uuid={{ item[1].uuid }}
-  with_nested:
-    - "{{ vm_list }}"
-    - "{{ sr_list }}"
-
-- name: Delete snapshot
-  shell: xe snapshot-uninstall force=true snapshot-uuid={{ item.uuid }}
-  with_items: "{{ vm_list }}"
-
-- name: Get template date
-  shell: xe template-list | grep -A1 {{ item.name }} | grep name-description | sed 's/.*Template created\ //'
-  register: date_template
-  with_items: "{{ vm_list }}"
-
-- name: Generate date_list
-  set_fact:
-    date_list: "{{ date_list + [ {'date': item} ] }}"
-  with_items: "{{ date_template.results| map(attribute='stdout_lines')| list }}"
-
-- name: Get template uuid
-  shell: xe template-list | grep -B1 {{ item.name }} | grep uuid | sed 's/.*\:\ //'
-  register: uuid_template
-  with_items: "{{ vm_list }}"
-
-- name: Generate uuid_list
-  set_fact:
-     uuid_list: "{{ uuid_list + [ {'uuid': item} ] }}"
-  with_items: "{{ uuid_template.results| map(attribute='stdout_lines')| list }}"
-
-- name: Delete old template
-  shell: xe template-uninstall force=true template-uuid={{ item.1.uuid }}
-  with_together:
-    - "{{ date_list }}"
-    - "{{ uuid_list }}"
-  when: item.0.date != ansible_date_time.date
+- include: vm_backup.yml
+  with_items: "{{ vm }}"
+  loop_control:
+    loop_var: item_vm
